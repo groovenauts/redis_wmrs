@@ -25,14 +25,13 @@ module RedisWmrs
         try_next_sentinel
         host_attrs = fetch_slaves
         host_attrs.each do |attrs|
-          # puts attrs.inspect
           begin
             host, port = attrs["ip"], attrs["port"]
             if host && port
               # An ip:port pair
               @options.merge!(:host => host, :port => port.to_i, :password => @master_password)
               refresh_sentinels_list
-              break
+              return
             else
               # A null reply
             end
