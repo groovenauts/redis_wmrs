@@ -18,7 +18,33 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+
+redis = RedisWmrs.new(
+  :master_name => "sentinel_master",
+  :sentinels => [
+    {:host => "redis01", :port => 26379},
+    {:host => "redis02", :port => 26379},
+    {:host => "redis03", :port => 26379}
+  ])
+
+i = -1
+while true
+  i += 1
+  i = 0 if i > 10
+  redis.set("foo", Time.now.to_s) if i == 0
+
+  header = "[#{Time.now.to_s}] sentinel:#{redis.client.current_sentinel.client.location} redis:#{redis.client.location}"
+  begin
+    puts "#{header} #{redis.get 'foo'}"
+  rescue => e
+    puts "#{header} [#{e.class.name}]: #{e.message}"
+  end
+  sleep 1
+end
+
+```
+
 
 ## Contributing
 
