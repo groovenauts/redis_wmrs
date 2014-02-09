@@ -1,0 +1,3 @@
+module RedisWmrs
+  VERSION = "0.0.1"
+end
