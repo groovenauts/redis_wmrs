@@ -17,7 +17,6 @@ module RedisWmrs
             f = "#{@options[:host]}:#{@options[:port]}"
             @failed.delete(f)
             @failed.push(f) # 必ず末尾に追加する
-            puts "@failed: #{@failed.inspect}"
             raise e
           else
             @failed.delete("#{@options[:host]}:#{@options[:port]}") if @failed
@@ -74,7 +73,6 @@ module RedisWmrs
         sort_by{|i| attrs_array[i]["slave-priority"].to_i}.reverse
       result = (preferred_indexes + not_preferred).map{|i| attrs_array[i]}
       # 接続に失敗した接続先は優先度を下げます
-      puts "@failed: #{@failed.inspect}"
       (@failed || []).each do |failed|
         if idx = result.index{|r| failed == "#{r['ip']}:#{r['port']}" }
           result.push(result.delete_at(idx))
