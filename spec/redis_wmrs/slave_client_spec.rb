@@ -65,6 +65,16 @@ describe RedisWmrs::SlaveClient do
       failed = subject.instance_variable_get(:@failed)
       expect(failed).to eq ["192.168.55.105:6379"]
     end
+
+    it "removes failed server when connect successfully" do
+      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+      subject.instance_variable_set(:@failed, ["192.168.55.105:6379", "192.168.55.104:6379", "apisrv01:6379"])
+      subject.should_receive(:connect_without_sentinel)
+      subject.connect
+      failed = subject.instance_variable_get(:@failed)
+      expect(failed).to eq ["192.168.55.104:6379", "apisrv01:6379"]
+    end
   end
 
   describe "#fetch_slaves" do
