@@ -13,6 +13,10 @@ describe RedisWmrs::Dispatcher do
 
   call_actions = [:call, :call_loop, :call_with_timeout, :call_without_timeout].freeze
 
+  def args_for_call(action, args, timeout = 1)
+    return (action == :call_with_timeout) ? [args, timeout] : [args]
+  end
+
   context "default behavior" do
     let(:master_client){ double(:master) }
     let(:slave_client){ double(:slave) }
@@ -43,22 +47,58 @@ describe RedisWmrs::Dispatcher do
 
       call_actions.each do |action|
         describe action do
-          it :select do
-            args = (action == :call_with_timeout) ? [[:select, 5], 1] : [[:select, 5]] # 5 means another DB on redis
-            master_client.should_receive(action).with(*args)
-            slave_client.should_receive(action).with(*args)
-            subject.send(action, *args)
-          end
-
-          it :quit do
-            args = (action == :call_with_timeout) ? [[:quit], 1] : [[:quit]]
-            master_client.should_receive(action).with(*args)
-            slave_client.should_receive(action).with(*args)
-            subject.send(action, *args)
+          [
+           [:select, 5],
+           [:quit],
+          ].each do |args|
+            it args.first do
+              args = args_for_call(action, args)
+              master_client.should_receive(action).with(*args)
+              slave_client.should_receive(action).with(*args)
+              subject.send(action, *args)
+            end
           end
         end
       end
-      
+    end
+
+    context "slave client work to" do
+      call_actions.each do |action|
+        describe action do
+          [
+           [:keys],
+           [:keys, "foo*"],
+           [:randomkey],
+           [:get, "foo"],
+           [:mget, "foo", "bar"],
+          ].each do |args|
+            it args.first do
+              args = args_for_call(action, args)
+              slave_client.should_receive(action).with(*args)
+              subject.send(action, *args)
+            end
+          end
+        end
+      end
+    end
+
+    context "master client work to" do
+      call_actions.each do |action|
+        describe action do
+          [
+           [:del, "foo"],
+           [:set, "foo", "bar"],
+           [:setex, "foo", 100, "bar"],
+           [:mset, "foo", 1, "bar", 100],
+          ].each do |args|
+            it args.first do
+              args = args_for_call(action, args)
+              master_client.should_receive(action).with(*args)
+              subject.send(action, *args)
+            end
+          end
+        end
+      end
     end
 
   end
