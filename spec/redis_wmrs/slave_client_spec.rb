@@ -43,11 +43,15 @@ describe RedisWmrs::SlaveClient do
 
   let(:sentinel){ double(:sentinel) }
   before do
-    subject.stub(:sentinel?).and_return(true)
     subject.stub(:establish_connection)
     subject.stub(:auto_retry_with_timeout).and_yield
     subject.stub(:current_sentinel).and_return(sentinel)
     subject.stub(:try_next_sentinel)
+  end
+
+  context "basic pattern" do
+  before do
+    subject.stub(:sentinel?).and_return(true)
     subject.stub(:refresh_sentinels_list)
   end
 
@@ -74,6 +78,19 @@ describe RedisWmrs::SlaveClient do
       subject.connect
       failed = subject.instance_variable_get(:@failed)
       expect(failed).to eq ["192.168.55.104:6379", "apisrv01:6379"]
+    end
+
+
+    it "fails to connect sentinel" do
+      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+      error = "connection error"
+      subject.should_receive(:connect_without_sentinel).and_raise(error)
+      expect{
+        subject.connect
+      }.to raise_error(RuntimeError, error)
+      failed = subject.instance_variable_get(:@failed)
+      expect(failed).to eq ["192.168.55.105:6379"]
     end
   end
 
@@ -112,4 +129,5 @@ describe RedisWmrs::SlaveClient do
     end
   end
 
+  end
 end
