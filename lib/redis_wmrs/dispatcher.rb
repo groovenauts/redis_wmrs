@@ -64,7 +64,7 @@ class RedisWmrs::Dispatcher
   end
 
   def call_without_timeout(command, &blk)
-    __dispatch__(*command){|c|c.call_with_timeout(command, &blk)}
+    __dispatch__(*command){|c|c.call_without_timeout(command, &blk)}
   end
 
   # すべてのpublicメソッドの定義後で実行する必要があります
