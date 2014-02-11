@@ -81,9 +81,6 @@ module RedisWmrs
         end
       end
       return result
-    rescue Exception => e
-      puts "[#{e.class}] #{e.message}\n  " << e.backtrace.join("\n  ")
-      raise e
     end
     private :fetch_slaves
 
