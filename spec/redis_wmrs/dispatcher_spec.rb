@@ -17,6 +17,25 @@ describe RedisWmrs::Dispatcher do
     return (action == :call_with_timeout) ? [args, timeout] : [args]
   end
 
+  context "original methods" do
+    let(:master_client){ double(:master) }
+    let(:slave_client){ double(:slave) }
+    let(:options){ {master_name: "sentinel_apisrv"} }
+    subject{ RedisWmrs::Dispatcher.new(master_client, slave_client, options) }
+
+    it "#ids" do
+      master_client.stub(:id).and_return("redis://192.168.55.101:6379/1")
+      slave_client.stub(:id).and_return("redis://192.168.55.104:6379/1")
+      expect(subject.ids).to eq ["redis://192.168.55.101:6379/1", "redis://192.168.55.104:6379/1"]
+    end
+
+    it "#locations" do
+      master_client.stub(:location).and_return("192.168.55.101:6379")
+      slave_client.stub(:location).and_return("192.168.55.104:6379")
+      expect(subject.locations).to eq ["192.168.55.101:6379", "192.168.55.104:6379"]
+    end
+  end
+
   context "default behavior" do
     let(:master_client){ double(:master) }
     let(:slave_client){ double(:slave) }

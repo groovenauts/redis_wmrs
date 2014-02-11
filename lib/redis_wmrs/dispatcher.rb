@@ -83,11 +83,7 @@ class RedisWmrs::Dispatcher
   def __slave__ ; yield(@slave ); end
 
   def __map__
-    if block_given?
-      [yield(@master), yield(@slave)]
-    else
-      [@master, @slave]
-    end
+    [yield(@master), yield(@slave)]
   end
 
   def __dispatch__(command, *, &blk)
