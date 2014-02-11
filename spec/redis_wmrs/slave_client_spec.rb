@@ -130,4 +130,31 @@ describe RedisWmrs::SlaveClient do
     end
 
   end
+
+  context "when can't connect to sentinel" do
+    subject{ RedisWmrs::SlaveClient.new(master_name: "sentinel_apisrv") }
+    let(:error){ Redis::CommandError.new("something wrong") }
+    before do
+      subject.stub(:sentinel?).and_return(true)
+      subject.stub(:refresh_sentinels_list).and_raise(error)
+    end
+
+    it "should re-raise the error" do
+      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+      expect{
+        subject.connect
+      }.to raise_error(error)
+    end
+  end
+
+  context "connect without sentinel" do
+    subject{ RedisWmrs::SlaveClient.new }
+    it{ expect(subject.sentinel?).to eq false }
+    it "should re-raise the error" do
+      subject.should_receive(:connect_without_sentinel)
+      subject.connect
+    end
+  end
+
 end
