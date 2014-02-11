@@ -157,4 +157,16 @@ describe RedisWmrs::SlaveClient do
     end
   end
 
+  describe ".ip_and_hostnames" do
+    context "usually" do
+      let(:my_hostname){ "apisrv00" }
+      let(:my_ip){ "192.168.55.100" }
+      before do
+        Socket.stub(:gethostname).and_return(my_hostname)
+        IPSocket.stub(:getaddress).with(my_hostname).and_return(my_ip)
+      end
+      it{ expect(RedisWmrs::SlaveClient.ip_and_hostnames).to eq [my_hostname, my_ip] }
+    end
+  end
+
 end
