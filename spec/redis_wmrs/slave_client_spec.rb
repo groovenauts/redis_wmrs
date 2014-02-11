@@ -50,84 +50,84 @@ describe RedisWmrs::SlaveClient do
   end
 
   context "basic pattern" do
-  before do
-    subject.stub(:sentinel?).and_return(true)
-    subject.stub(:refresh_sentinels_list)
-  end
+    before do
+      subject.stub(:sentinel?).and_return(true)
+      subject.stub(:refresh_sentinels_list)
+    end
 
-  describe "#connect" do
-    subject{ RedisWmrs::SlaveClient.new(master_name: "sentinel_apisrv") }
+    describe "#connect" do
+      subject{ RedisWmrs::SlaveClient.new(master_name: "sentinel_apisrv") }
 
-    it "fails to connect_with_sentinel" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      error = "connection error"
-      subject.should_receive(:connect_without_sentinel).and_raise(error)
-      expect{
+      it "fails to connect_with_sentinel" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        error = "connection error"
+        subject.should_receive(:connect_without_sentinel).and_raise(error)
+        expect{
+          subject.connect
+        }.to raise_error(RuntimeError, error)
+        failed = subject.instance_variable_get(:@failed)
+        expect(failed).to eq ["192.168.55.105:6379"]
+      end
+
+      it "removes failed server when connect successfully" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        subject.instance_variable_set(:@failed, ["192.168.55.105:6379", "192.168.55.104:6379", "apisrv01:6379"])
+        subject.should_receive(:connect_without_sentinel)
         subject.connect
-      }.to raise_error(RuntimeError, error)
-      failed = subject.instance_variable_get(:@failed)
-      expect(failed).to eq ["192.168.55.105:6379"]
+        failed = subject.instance_variable_get(:@failed)
+        expect(failed).to eq ["192.168.55.104:6379", "apisrv01:6379"]
+      end
+
+
+      it "fails to connect sentinel" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        error = "connection error"
+        subject.should_receive(:connect_without_sentinel).and_raise(error)
+        expect{
+          subject.connect
+        }.to raise_error(RuntimeError, error)
+        failed = subject.instance_variable_get(:@failed)
+        expect(failed).to eq ["192.168.55.105:6379"]
+      end
     end
 
-    it "removes failed server when connect successfully" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      subject.instance_variable_set(:@failed, ["192.168.55.105:6379", "192.168.55.104:6379", "apisrv01:6379"])
-      subject.should_receive(:connect_without_sentinel)
-      subject.connect
-      failed = subject.instance_variable_get(:@failed)
-      expect(failed).to eq ["192.168.55.104:6379", "apisrv01:6379"]
+    describe "#fetch_slaves" do
+      subject{ RedisWmrs::SlaveClient.new(master_name: "sentinel_apisrv") }
+
+      it "use master if the process works on same server" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["apisrv01", "192.168.55.101"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        slaves = subject.send(:fetch_slaves)
+        m = slaves.first
+        expect(m["ip"]).to eq "apisrv01"
+        expect(m["port"]).to eq "6379"
+        expect(m["slave-priority"]).to eq 0
+      end
+
+      it "use slave if the process works on same server" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["apisrv02", "192.168.55.104"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        slaves = subject.send(:fetch_slaves)
+        m = slaves.first
+        expect(m["ip"]).to eq "192.168.55.104"
+        expect(m["port"]).to eq "6379"
+        expect(m["slave-priority"]).to eq "100"
+      end
+
+      it "pull down priority about the server that failed to connect" do
+        RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
+        sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
+        subject.instance_variable_set(:@failed, ["192.168.55.105:6379"])
+        slaves = subject.send(:fetch_slaves)
+        m = slaves.first
+        expect(m["ip"]).to eq "192.168.55.104"
+        expect(m["port"]).to eq "6379"
+        expect(m["slave-priority"]).to eq "100"
+      end
     end
-
-
-    it "fails to connect sentinel" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      error = "connection error"
-      subject.should_receive(:connect_without_sentinel).and_raise(error)
-      expect{
-        subject.connect
-      }.to raise_error(RuntimeError, error)
-      failed = subject.instance_variable_get(:@failed)
-      expect(failed).to eq ["192.168.55.105:6379"]
-    end
-  end
-
-  describe "#fetch_slaves" do
-    subject{ RedisWmrs::SlaveClient.new(master_name: "sentinel_apisrv") }
-
-    it "use master if the process works on same server" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["apisrv01", "192.168.55.101"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      slaves = subject.send(:fetch_slaves)
-      m = slaves.first
-      expect(m["ip"]).to eq "apisrv01"
-      expect(m["port"]).to eq "6379"
-      expect(m["slave-priority"]).to eq 0
-    end
-
-    it "use slave if the process works on same server" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["apisrv02", "192.168.55.104"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      slaves = subject.send(:fetch_slaves)
-      m = slaves.first
-      expect(m["ip"]).to eq "192.168.55.104"
-      expect(m["port"]).to eq "6379"
-      expect(m["slave-priority"]).to eq "100"
-    end
-
-    it "pull down priority about the server that failed to connect" do
-      RedisWmrs::SlaveClient.stub(:ip_and_hostnames).and_return(["another", "192.168.55.100"])
-      sentinel.should_receive(:sentinel).with("slaves", "sentinel_apisrv").and_return(sentinel_slaves)
-      subject.instance_variable_set(:@failed, ["192.168.55.105:6379"])
-      slaves = subject.send(:fetch_slaves)
-      m = slaves.first
-      expect(m["ip"]).to eq "192.168.55.104"
-      expect(m["port"]).to eq "6379"
-      expect(m["slave-priority"]).to eq "100"
-    end
-  end
 
   end
 end
