@@ -5,7 +5,10 @@ describe RedisWmrs do
     RedisWmrs::VERSION.should_not be_nil
   end
 
-  it 'should do something useful' do
-    false.should be_true
+  describe ".new" do
+    let(:instance){ RedisWmrs.new(master_name: "sentinel_apisrv") }
+    it{ expect(instance).to be_a(::Redis) }
+    it{ expect(instance).to be_a(RedisWmrs::Impl) }
+    it{ expect(instance).to_not be_a(RedisWmrs) }
   end
 end
