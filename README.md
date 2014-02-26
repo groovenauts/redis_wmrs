@@ -1,6 +1,23 @@
-# RedisWmrs
+# redis_wmrs
 
-TODO: Write a gem description
+There are some client libraries for [redis](http://redis.io/) on ruby.
+
+https://rubygems.org/search?query=redis
+
+[redis-sentinel](https://github.com/flyerhzm/redis-sentinel) works well
+with redis and redis sentinel cluster. But it look up master node only.
+Even if there are a lot of redis-servers, each redis client will connect
+to one redis-server.
+
+
+## Write master, Read slave
+
+If you want to distribute accesses to the master node, you need to read
+data from slave node and write to master node.
+
+
+## Background
+
 
 ## Installation
 
