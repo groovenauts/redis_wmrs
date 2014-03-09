@@ -18,6 +18,9 @@ data from slave node and write to master node.
 
 ## Background
 
+![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-3F688.png)
+
+
 
 ## Installation
 
