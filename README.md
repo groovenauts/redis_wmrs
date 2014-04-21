@@ -28,32 +28,8 @@ RedisWmrs makes 2 redis-sentinel clients look 1 client.
 
 We made a benchmark tool [redis_cluster_cache_benchmark](https://github.com/groovenauts/redis_cluster_cache_benchmark) for cache with a master-slave cluster.
 
-This tool can run scenario by using one of these three mechanisms.
+see [a result](https://github.com/groovenauts/redis_cluster_cache_benchmark/tree/master/doc/vagrant02) for more detail
 
-| Name         | Cache place | Write     | Read        |
-| ------------ |-------------|-----------|-------------|
-| Memory cache | Memory      | memory    | memory      |
-| Redis        | Redis       | to master | from master |
-| RedisWmrs    | Redis       | to master | from slave  |
-
-### A result on VMs
-
-* 10 VMs on iMac, 10 worker process run on each VM.
-* the scenario is just GET or SET.
-* 1 test repeats the scenario 10,000 times.
-* Master redis node is on apisrv01.
-
-| Name         | server   | time(sec) | GET avg(ms) | SET avg(ms) | worker total(KB) | redis-sever(KB) | total(KB) |
-| ------------ |:--------:| ---------:| -----------:| -----------:|-----------------:| ---------------:|----------:|
-| Memory cache | apisrv01 | 289       |  0.263      |  0.592      | 461,644          |  -              | 461,644   |
-| Redis        | apisrv01 | 272       | 25.788      | 28.153      | 118,724          | 75,852          | 194,576   |
-| Redis        | apisrv05 | 315       | 29.977      | 34.669      | 120,612          | 73,232          | 193,844   |
-| RedisWmrs    | apisrv01 | 201       | 11.681      | 24.778      | 128,884          | 75,420          | 204,304   |
-| RedisWmrs    | apisrv05 | 177       |  7.088      | 45.593      | 121,364          | 73,232          | 194,596   |
-
-RedisWmrs works fater than Redis and Memory cache.
-
-For more detail https://github.com/groovenauts/redis_cluster_cache_benchmark/tree/master/doc/vagrant1
 
 ## Installation
 
