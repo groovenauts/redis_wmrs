@@ -21,7 +21,7 @@ RedisWmrs makes 2 redis-sentinel clients look 1 client.
 
 ## Background
 
-![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-3F688.png)
+![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-DFF4B.png)
 
 
 ## Performance
