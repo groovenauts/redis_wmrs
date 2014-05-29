@@ -19,7 +19,7 @@ RedisWmrs makes 2 redis-sentinel clients look 1 client.
 
 
 
-## Background
+## Overview
 
 ### before using redis_wmrs
 
