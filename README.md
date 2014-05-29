@@ -25,14 +25,14 @@ RedisWmrs makes 2 redis-sentinel clients look 1 client.
 
 just only using redis-sentinel
 
-![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-DFF4B.png)
+![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-DFF4B.png?t=1401364131205)
 
 GET and SET commands are sent to one master redis server only.
 
 
 ### after using redis_wmrs
 
-![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-2B7B6.png)
+![](https://cacoo.com/diagrams/5Rfve7mdSxEvMjwq-2B7B6.png?t=1401364131205)
 
 GET commands are sent to each local redis server.
 SET commands are sent to one master redis server only.
